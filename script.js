@@ -1,38 +1,141 @@
+/* =============================================
+   CUSTOM CURSOR — requestAnimationFrame
+   ============================================= */
+const cursor = document.getElementById('cursor');
+let mouseX = 0, mouseY = 0;
+let rafId = null;
 
-  // Cursor
-  const cursor = document.getElementById('cursor');
+if (cursor && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
   document.addEventListener('mousemove', e => {
-    cursor.style.left = e.clientX + 'px';
-    cursor.style.top = e.clientY + 'px';
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    if (!rafId) {
+      rafId = requestAnimationFrame(() => {
+        cursor.style.left = mouseX + 'px';
+        cursor.style.top  = mouseY + 'px';
+        rafId = null;
+      });
+    }
   });
+
   document.querySelectorAll('a, button').forEach(el => {
     el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
     el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
   });
+}
 
-  // Menu tabs
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.menu-panel').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+/* =============================================
+   STICKY NAV — .scrolled class on scroll
+   ============================================= */
+const nav = document.querySelector('nav');
+if (nav) {
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
+}
+
+/* =============================================
+   HAMBURGER MENU
+   ============================================= */
+const navToggle = document.querySelector('.nav-toggle');
+const navMenu   = document.getElementById('nav-menu');
+
+if (navToggle && navMenu) {
+  navToggle.addEventListener('click', () => {
+    const isOpen = navToggle.getAttribute('aria-expanded') === 'true';
+    navToggle.setAttribute('aria-expanded', String(!isOpen));
+    navMenu.classList.toggle('is-open', !isOpen);
+  });
+
+  // Close on nav link click
+  navMenu.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      navToggle.setAttribute('aria-expanded', 'false');
+      navMenu.classList.remove('is-open');
     });
   });
 
-  // Scroll reveal
+  // Close on Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && navMenu.classList.contains('is-open')) {
+      navToggle.setAttribute('aria-expanded', 'false');
+      navMenu.classList.remove('is-open');
+      navToggle.focus();
+    }
+  });
+}
+
+/* =============================================
+   MENU TABS — keyboard accessible (ARIA pattern)
+   ============================================= */
+const tabBtns   = Array.from(document.querySelectorAll('.tab-btn[role="tab"]'));
+const tabPanels = Array.from(document.querySelectorAll('.menu-panel[role="tabpanel"]'));
+
+function activateTab(btn) {
+  tabBtns.forEach(b => {
+    b.classList.remove('active');
+    b.setAttribute('aria-selected', 'false');
+    b.setAttribute('tabindex', '-1');
+  });
+  tabPanels.forEach(p => {
+    p.classList.remove('active');
+    p.hidden = true;
+  });
+
+  btn.classList.add('active');
+  btn.setAttribute('aria-selected', 'true');
+  btn.setAttribute('tabindex', '0');
+
+  const panel = document.getElementById('tab-' + btn.dataset.tab);
+  if (panel) {
+    panel.classList.add('active');
+    panel.hidden = false;
+  }
+}
+
+tabBtns.forEach((btn, index) => {
+  btn.addEventListener('click', () => {
+    activateTab(btn);
+    btn.focus();
+  });
+
+  btn.addEventListener('keydown', e => {
+    let newIndex = null;
+    if (e.key === 'ArrowRight') newIndex = (index + 1) % tabBtns.length;
+    if (e.key === 'ArrowLeft')  newIndex = (index - 1 + tabBtns.length) % tabBtns.length;
+    if (e.key === 'Home')       newIndex = 0;
+    if (e.key === 'End')        newIndex = tabBtns.length - 1;
+
+    if (newIndex !== null) {
+      e.preventDefault();
+      activateTab(tabBtns[newIndex]);
+      tabBtns[newIndex].focus();
+    }
+  });
+});
+
+/* =============================================
+   SCROLL REVEAL — respects prefers-reduced-motion
+   ============================================= */
+if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const revealEls = document.querySelectorAll(
+    '.menu-category, .gallery-item, .info-block, .feature-card, .event-card'
+  );
+
   const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.style.opacity = '1';
-        e.target.style.transform = 'translateY(0)';
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        observer.unobserve(entry.target);
       }
     });
   }, { threshold: 0.1 });
 
-  document.querySelectorAll('.menu-category, .gallery-item, .info-block, .feature-card').forEach(el => {
+  revealEls.forEach(el => {
     el.style.opacity = '0';
     el.style.transform = 'translateY(30px)';
     el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
     observer.observe(el);
   });
+}
