@@ -139,3 +139,41 @@ if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     observer.observe(el);
   });
 }
+
+/* =============================================
+   BACK TO TOP
+   ============================================= */
+const backToTop = document.getElementById('backToTop');
+if (backToTop) {
+  backToTop.removeAttribute('hidden');
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('visible', window.scrollY > 400);
+  }, { passive: true });
+
+  backToTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+/* =============================================
+   ACTIVE NAV LINK ON SCROLL
+   ============================================= */
+const sections = document.querySelectorAll('main section[id]');
+const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+
+if (sections.length && navLinks.length) {
+  const navObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.toggle(
+            'active-section',
+            link.getAttribute('href') === '#' + entry.target.id
+          );
+        });
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+
+  sections.forEach(s => navObserver.observe(s));
+}
