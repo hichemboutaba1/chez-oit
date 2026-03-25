@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explore The World — Vivez l'Extraordinaire</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --white: #ffffff;
+      --dark: #0a0a0a;
+      --dark-mid: #141414;
+      --glass: rgba(255,255,255,0.08);
+      --glass-border: rgba(255,255,255,0.15);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--dark);
+      color: var(--white);
+      overflow-x: hidden;
+    }
+
+    /* ─── SCROLLBAR ─── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+    /* ─── HERO ─── */
+    #hero {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .video-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 1.8s ease;
+      z-index: 0;
+    }
+    .video-bg.active { opacity: 1; }
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.15) 0%,
+        rgba(0,0,0,0.45) 50%,
+        rgba(0,0,0,0.85) 100%
+      );
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding: 0 1.5rem;
+      max-width: 900px;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 1s 0.3s forwards;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 8vw, 7rem);
+      line-height: 1.05;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: fadeUp 1s 0.6s forwards;
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      font-weight: 300;
+      color: rgba(255,255,255,0.8);
+      line-height: 1.7;
+      max-width: 580px;
+      margin: 0 auto 2.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 1s 0.9s forwards;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 1s 1.2s forwards;
+    }
+
+    .btn-primary {
+      padding: 0.9rem 2.5rem;
+      background: var(--gold);
+      color: var(--dark);
+      font-weight: 600;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
+
+    .btn-outline {
+      padding: 0.9rem 2.5rem;
+      border: 1px solid rgba(255,255,255,0.5);
+      color: var(--white);
+      font-weight: 400;
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: border-color 0.3s, background 0.3s, transform 0.2s;
+    }
+    .btn-outline:hover {
+      border-color: var(--gold);
+      background: rgba(201,168,76,0.1);
+      transform: translateY(-2px);
+    }
+
+    /* Video indicator dots */
+    .video-dots {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 0.6rem;
+      z-index: 3;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.35);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+    .dot.active { background: var(--gold); transform: scale(1.4); }
+
+    /* Scroll indicator */
+    .scroll-hint {
+      position: absolute;
+      bottom: 2.5rem;
+      right: 2.5rem;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .scroll-line {
+      width: 1px;
+      height: 50px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), var(--gold));
+      animation: scrollLine 1.5s ease-in-out infinite;
+    }
+    @keyframes scrollLine {
+      0%,100% { opacity: 0.3; height: 30px; }
+      50% { opacity: 1; height: 50px; }
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.5rem 3rem;
+      transition: background 0.4s, padding 0.4s;
+    }
+    nav.scrolled {
+      background: rgba(10,10,10,0.92);
+      backdrop-filter: blur(12px);
+      padding: 1rem 3rem;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--white);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+    }
+    .logo span { color: var(--gold); }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover { color: var(--gold-light); }
+
+    /* ─── STATS BAR ─── */
+    .stats-bar {
+      background: var(--dark-mid);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 2.5rem 5%;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      text-align: center;
+    }
+    .stat-item { padding: 1rem; }
+    .stat-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      color: var(--gold-light);
+      font-weight: 700;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.5);
+      margin-top: 0.35rem;
+    }
+
+    /* ─── SECTION COMMONS ─── */
+    section { padding: 6rem 5%; }
+
+    .section-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+    .section-desc {
+      color: rgba(255,255,255,0.6);
+      font-size: 1rem;
+      line-height: 1.8;
+      max-width: 520px;
+    }
+
+    /* ─── DESTINATIONS ─── */
+    #destinations { background: var(--dark); }
+
+    .destinations-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 3rem;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .dest-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto;
+      gap: 1.5rem;
+    }
+
+    .dest-card {
+      position: relative;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      aspect-ratio: 4/3;
+      background: #1a1a1a;
+    }
+    .dest-card:first-child {
+      grid-row: span 2;
+      aspect-ratio: unset;
+    }
+
+    .dest-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s ease;
+    }
+    .dest-card:hover video { transform: scale(1.05); }
+
+    .dest-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%);
+      transition: background 0.4s;
+    }
+    .dest-card:hover .dest-overlay {
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.25) 60%);
+    }
+
+    .dest-info {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 1.5rem;
+    }
+    .dest-region {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      margin-bottom: 0.35rem;
+    }
+    .dest-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+    .dest-card:first-child .dest-name { font-size: 2rem; }
+    .dest-tagline {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.65);
+      margin-top: 0.35rem;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s;
+    }
+    .dest-card:hover .dest-tagline { max-height: 3rem; }
+
+    /* ─── EXPERIENCE ─── */
+    #experience {
+      background: var(--dark-mid);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    .experience-visual {
+      position: relative;
+    }
+    .exp-video-wrap {
+      border-radius: 4px;
+      overflow: hidden;
+      aspect-ratio: 9/10;
+    }
+    .exp-video-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .exp-badge {
+      position: absolute;
+      bottom: -1.5rem;
+      right: -1.5rem;
+      background: var(--gold);
+      color: var(--dark);
+      padding: 1.5rem;
+      border-radius: 3px;
+      text-align: center;
+      min-width: 130px;
+    }
+    .exp-badge-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .exp-badge-text {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-top: 0.3rem;
+    }
+
+    .experience-text { padding-right: 2rem; }
+
+    .features-list {
+      margin-top: 2.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .feature-item {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.12);
+      border: 1px solid rgba(201,168,76,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .feature-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+    .feature-desc {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+    }
+
+    /* ─── QUOTE ─── */
+    #quote {
+      position: relative;
+      min-height: 60vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow: hidden;
+      padding: 6rem 5%;
+    }
+    .quote-video-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    .quote-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 1;
+    }
+    .quote-content {
+      position: relative;
+      z-index: 2;
+      max-width: 780px;
+    }
+    .quote-mark {
+      font-family: 'Playfair Display', serif;
+      font-size: 6rem;
+      color: var(--gold);
+      line-height: 0.5;
+      margin-bottom: 1rem;
+      opacity: 0.6;
+    }
+    .quote-text {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+      font-style: italic;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+    .quote-author {
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+    }
+
+    /* ─── GALLERY STRIP ─── */
+    #gallery {
+      background: var(--dark);
+      padding: 5rem 0;
+      overflow: hidden;
+    }
+    .gallery-header {
+      text-align: center;
+      padding: 0 5% 3rem;
+    }
+    .gallery-strip {
+      display: flex;
+      gap: 1rem;
+      animation: stripScroll 30s linear infinite;
+      width: max-content;
+    }
+    .gallery-strip:hover { animation-play-state: paused; }
+    @keyframes stripScroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    .gallery-item {
+      width: 300px;
+      height: 200px;
+      border-radius: 3px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .gallery-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ─── CTA SECTION ─── */
+    #cta {
+      background: linear-gradient(135deg, #0d0d0d 0%, #1a1408 50%, #0d0d0d 100%);
+      text-align: center;
+      padding: 7rem 5%;
+      border-top: 1px solid rgba(201,168,76,0.2);
+    }
+    .cta-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .cta-title em { font-style: italic; color: var(--gold-light); }
+    .cta-desc {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 3rem;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.7;
+    }
+    .cta-form {
+      display: flex;
+      max-width: 450px;
+      margin: 0 auto;
+      gap: 0;
+    }
+    .cta-form input {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-right: none;
+      color: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      border-radius: 2px 0 0 2px;
+    }
+    .cta-form input::placeholder { color: rgba(255,255,255,0.35); }
+    .cta-form input:focus { border-color: var(--gold); }
+    .cta-form button {
+      padding: 1rem 1.8rem;
+      background: var(--gold);
+      border: none;
+      color: var(--dark);
+      font-weight: 700;
+      font-size: 0.85rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 0 2px 2px 0;
+      transition: background 0.3s;
+    }
+    .cta-form button:hover { background: var(--gold-light); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      background: #050505;
+      padding: 3rem 5% 2rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      color: var(--white);
+    }
+    .footer-logo span { color: var(--gold); }
+    .footer-copy {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.05em;
+    }
+    .footer-social {
+      display: flex;
+      gap: 1rem;
+    }
+    .social-link {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+      font-size: 0.85rem;
+      transition: border-color 0.3s, color 0.3s;
+    }
+    .social-link:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ─── ANIMATIONS ─── */
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      nav { padding: 1.2rem 1.5rem; }
+      nav.scrolled { padding: 0.8rem 1.5rem; }
+      .nav-links { display: none; }
+
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+
+      .dest-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: unset;
+      }
+      .dest-card:first-child { grid-row: unset; aspect-ratio: 16/9; }
+
+      #experience {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        padding: 4rem 5%;
+      }
+      .exp-badge { bottom: -1rem; right: 1rem; }
+      .experience-text { padding-right: 0; }
+
+      .cta-form { flex-direction: column; }
+      .cta-form input { border-right: 1px solid rgba(255,255,255,0.15); border-bottom: none; border-radius: 2px 2px 0 0; }
+      .cta-form button { border-radius: 0 0 2px 2px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── NAV ─── -->
+  <nav id="navbar">
+    <a class="logo" href="#"><span>E</span>xplore</a>
+    <ul class="nav-links">
+      <li><a href="#destinations">Destinations</a></li>
+      <li><a href="#experience">Expériences</a></li>
+      <li><a href="#gallery">Galerie</a></li>
+      <li><a href="#cta">Commencer</a></li>
+    </ul>
+    <a class="btn-primary" href="#cta" style="font-size:0.75rem;padding:0.65rem 1.5rem;">Planifier</a>
+  </nav>
+
+  <!-- ─── HERO ─── -->
+  <section id="hero">
+    <video class="video-bg active" id="v0" src="12855923_3840_2160_30fps.mp4"  autoplay muted loop playsinline></video>
+    <video class="video-bg"        id="v1" src="13019460_3840_2160_25fps.mp4"  autoplay muted loop playsinline></video>
+    <video class="video-bg"        id="v2" src="15388866_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video>
+    <video class="video-bg"        id="v3" src="15469526_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video>
+
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow">Bienvenue dans l'extraordinaire</p>
+      <h1 class="hero-title">Le monde vous<br>attend, <em>osez</em><br>l'explorer.</h1>
+      <p class="hero-subtitle">Des sommets enneigés aux déserts dorés, des forêts tropicales aux cités lumineuses — chaque destination est une histoire qui n'attend que vous.</p>
+      <div class="hero-cta">
+        <a class="btn-primary" href="#destinations">Découvrir les destinations</a>
+        <a class="btn-outline" href="#experience">Notre approche</a>
+      </div>
+    </div>
+
+    <div class="video-dots">
+      <div class="dot active" onclick="switchVideo(0)"></div>
+      <div class="dot"        onclick="switchVideo(1)"></div>
+      <div class="dot"        onclick="switchVideo(2)"></div>
+      <div class="dot"        onclick="switchVideo(3)"></div>
+    </div>
+
+    <div class="scroll-hint">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </section>
+
+  <!-- ─── STATS ─── -->
+  <div class="stats-bar reveal">
+    <div class="stat-item">
+      <div class="stat-number">195</div>
+      <div class="stat-label">Pays accessibles</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">1200+</div>
+      <div class="stat-label">Expériences uniques</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">50K+</div>
+      <div class="stat-label">Voyageurs inspirés</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">7</div>
+      <div class="stat-label">Merveilles du monde</div>
+    </div>
+  </div>
+
+  <!-- ─── DESTINATIONS ─── -->
+  <section id="destinations">
+    <div class="destinations-header reveal">
+      <div>
+        <p class="section-eyebrow">Nos destinations phares</p>
+        <h2 class="section-title">Des horizons qui<br>redéfinissent l'aventure</h2>
+      </div>
+      <p class="section-desc">Laissez-vous porter vers les paysages les plus saisissants de la planète. Chaque voyage, une renaissance.</p>
+    </div>
+
+    <div class="dest-grid">
+      <!-- Card 1 — large left -->
+      <div class="dest-card reveal">
+        <video src="15469526_3840_2160_60fps.mp4" autoplay muted loop playsinline></video>
+        <div class="dest-overlay"></div>
+        <div class="dest-info">
+          <div class="dest-region">Asie du Sud-Est</div>
+          <div class="dest-name">Thaïlande</div>
+          <div class="dest-tagline">Temples d'or, plages de rêve &amp; cuisine ensorcelante</div>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="dest-card reveal">
+        <video src="12855923_3840_2160_30fps.mp4" autoplay muted loop playsinline></video>
+        <div class="dest-overlay"></div>
+        <div class="dest-info">
+          <div class="dest-region">Amérique du Sud</div>
+          <div class="dest-name">Patagonie</div>
+          <div class="dest-tagline">Glaciers millénaires &amp; steppes infinies</div>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="dest-card reveal">
+        <video src="13019460_3840_2160_25fps.mp4" autoplay muted loop playsinline></video>
+        <div class="dest-overlay"></div>
+        <div class="dest-info">
+          <div class="dest-region">Europe</div>
+          <div class="dest-name">Islande</div>
+          <div class="dest-tagline">Aurores boréales &amp; volcans vivants</div>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="dest-card reveal">
+        <video src="15388866_3840_2160_60fps.mp4" autoplay muted loop playsinline></video>
+        <div class="dest-overlay"></div>
+        <div class="dest-info">
+          <div class="dest-region">Océanie</div>
+          <div class="dest-name">Nouvelle-Zélande</div>
+          <div class="dest-tagline">Fjords épiques &amp; nature sauvage</div>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="dest-card reveal">
+        <video src="13019460_3840_2160_25fps.mp4" autoplay muted loop playsinline style="filter:hue-rotate(20deg)"></video>
+        <div class="dest-overlay"></div>
+        <div class="dest-info">
+          <div class="dest-region">Afrique</div>
+          <div class="dest-name">Kenya</div>
+          <div class="dest-tagline">Grande migration &amp; savanes à perte de vue</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── EXPERIENCE ─── -->
+  <section id="experience">
+    <div class="experience-visual reveal">
+      <div class="exp-video-wrap">
+        <video src="15388866_3840_2160_60fps.mp4" autoplay muted loop playsinline></video>
+      </div>
+      <div class="exp-badge">
+        <div class="exp-badge-num">12+</div>
+        <div class="exp-badge-text">ans d'aventure</div>
+      </div>
+    </div>
+
+    <div class="experience-text reveal">
+      <p class="section-eyebrow">Notre philosophie</p>
+      <h2 class="section-title">Voyager n'est pas<br>une fuite — c'est<br>une <em style="font-style:italic;color:var(--gold-light)">découverte</em>.</h2>
+      <p class="section-desc">Nous créons des voyages qui transforment votre regard sur le monde et sur vous-même. Chaque itinéraire est conçu pour vous faire vivre l'authentique.</p>
+
+      <div class="features-list">
+        <div class="feature-item">
+          <div class="feature-icon">🌍</div>
+          <div>
+            <div class="feature-title">Expériences immersives</div>
+            <div class="feature-desc">Dormez dans des maisons de tribu, cuisinez avec des locaux, traversez des territoires vierges.</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">♻️</div>
+          <div>
+            <div class="feature-title">Tourisme responsable</div>
+            <div class="feature-desc">Chaque voyage compense son empreinte carbone et soutient des communautés locales.</div>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🧭</div>
+          <div>
+            <div class="feature-title">Guides passionnés</div>
+            <div class="feature-desc">Des experts natifs qui partagent leur amour profond de leur terre et de leurs traditions.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── QUOTE ─── -->
+  <section id="quote">
+    <video class="quote-video-bg" src="12855923_3840_2160_30fps.mp4" autoplay muted loop playsinline></video>
+    <div class="quote-overlay"></div>
+    <div class="quote-content reveal">
+      <div class="quote-mark">"</div>
+      <p class="quote-text">Le voyage est la seule chose que l'on achète qui nous rende plus riches.</p>
+      <p class="quote-author">— Proverbe du voyageur</p>
+    </div>
+  </section>
+
+  <!-- ─── GALLERY ─── -->
+  <section id="gallery" style="padding-left:0;padding-right:0;">
+    <div class="gallery-header reveal">
+      <p class="section-eyebrow">Le monde en images</p>
+      <h2 class="section-title">Chaque image, un appel</h2>
+    </div>
+    <div class="gallery-strip" id="galleryStrip">
+      <div class="gallery-item"><video src="12855923_3840_2160_30fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="13019460_3840_2160_25fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="15388866_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="15469526_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="12855923_3840_2160_30fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="13019460_3840_2160_25fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="15388866_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="15469526_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video></div>
+      <!-- duplicate for seamless loop -->
+      <div class="gallery-item"><video src="12855923_3840_2160_30fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="13019460_3840_2160_25fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="15388866_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="15469526_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="12855923_3840_2160_30fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="13019460_3840_2160_25fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="15388866_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video></div>
+      <div class="gallery-item"><video src="15469526_3840_2160_60fps.mp4"  autoplay muted loop playsinline></video></div>
+    </div>
+  </section>
+
+  <!-- ─── CTA ─── -->
+  <section id="cta">
+    <p class="section-eyebrow reveal" style="text-align:center">Votre prochain voyage commence ici</p>
+    <h2 class="cta-title reveal">Prêt à vivre <em>l'inoubliable</em> ?</h2>
+    <p class="cta-desc reveal">Entrez votre email et recevez nos meilleures offres, itinéraires secrets et inspirations de voyage.</p>
+    <form class="cta-form reveal" onsubmit="handleSubmit(event)">
+      <input type="email" placeholder="Votre adresse email" required />
+      <button type="submit">M'inspirer</button>
+    </form>
+  </section>
+
+  <!-- ─── FOOTER ─── -->
+  <footer>
+    <div class="footer-logo"><span>E</span>xplore the World</div>
+    <p class="footer-copy">© 2026 Explore The World — Tous droits réservés</p>
+    <div class="footer-social">
+      <a class="social-link" href="#" aria-label="Instagram">&#9679;</a>
+      <a class="social-link" href="#" aria-label="Facebook">f</a>
+      <a class="social-link" href="#" aria-label="YouTube">▶</a>
+    </div>
+  </footer>
+
+  <script>
+    // ─── Hero video carousel ───
+    let current = 0;
+    const videos = document.querySelectorAll('.video-bg');
+    const dots   = document.querySelectorAll('.dot');
+
+    function switchVideo(idx) {
+      videos[current].classList.remove('active');
+      dots[current].classList.remove('active');
+      current = idx;
+      videos[current].classList.add('active');
+      dots[current].classList.add('active');
+    }
+
+    let autoPlay = setInterval(() => switchVideo((current + 1) % 4), 6000);
+
+    dots.forEach((d, i) => d.addEventListener('click', () => {
+      clearInterval(autoPlay);
+      switchVideo(i);
+      autoPlay = setInterval(() => switchVideo((current + 1) % 4), 6000);
+    }));
+
+    // ─── Navbar on scroll ───
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // ─── Reveal on scroll ───
+    const reveals = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.12 });
+    reveals.forEach(el => io.observe(el));
+
+    // ─── CTA form ───
+    function handleSubmit(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.textContent = 'Bienvenue !';
+      btn.style.background = '#4caf50';
+      e.target.querySelector('input').value = '';
+      setTimeout(() => { btn.textContent = "M'inspirer"; btn.style.background = ''; }, 3000);
+    }
+  </script>
+</body>
+</html>
