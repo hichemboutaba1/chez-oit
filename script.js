@@ -177,3 +177,97 @@ if (sections.length && navLinks.length) {
 
   sections.forEach(s => navObserver.observe(s));
 }
+
+/* =============================================
+   CURSOR TRAIL
+   ============================================= */
+if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  const TRAIL_COUNT = 7;
+  const trailDots = [];
+  const positions = Array.from({ length: TRAIL_COUNT }, () => ({ x: 0, y: 0 }));
+
+  for (let i = 0; i < TRAIL_COUNT; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'cursor-trail';
+    const size = Math.max(3, 10 - i * 1.2);
+    dot.style.cssText = `width:${size}px;height:${size}px;opacity:${(1 - i / TRAIL_COUNT) * 0.35}`;
+    document.body.appendChild(dot);
+    trailDots.push(dot);
+  }
+
+  function animateTrail() {
+    // Shift positions: each dot follows the previous one
+    for (let i = positions.length - 1; i > 0; i--) {
+      positions[i].x += (positions[i - 1].x - positions[i].x) * 0.4;
+      positions[i].y += (positions[i - 1].y - positions[i].y) * 0.4;
+    }
+    positions[0].x = mouseX;
+    positions[0].y = mouseY;
+
+    trailDots.forEach((dot, i) => {
+      dot.style.left = positions[i].x + 'px';
+      dot.style.top  = positions[i].y + 'px';
+    });
+    requestAnimationFrame(animateTrail);
+  }
+  requestAnimationFrame(animateTrail);
+}
+
+/* =============================================
+   ANIMATED COUNTERS
+   ============================================= */
+const counterEls = document.querySelectorAll('.stat-num[data-count]');
+
+if (counterEls.length) {
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+  function animateCounter(el) {
+    const target = parseInt(el.dataset.count, 10);
+    const suffix = el.dataset.suffix || '';
+    const duration = 1800;
+    const start = performance.now();
+
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const value = Math.round(easeOut(progress) * target);
+      el.textContent = value + suffix;
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        animateCounter(entry.target);
+        counterObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  counterEls.forEach(el => counterObserver.observe(el));
+}
+
+/* =============================================
+   VIEW TRANSITIONS API — menu tabs
+   ============================================= */
+// Patch activateTab to use View Transitions when available
+if (typeof activateTab === 'function' && document.startViewTransition) {
+  const _original = activateTab;
+  // Redefine with View Transitions wrapper
+  window.activateTab = function(btn) {
+    document.startViewTransition(() => _original(btn));
+  };
+}
+
+/* =============================================
+   SERVICE WORKER REGISTRATION
+   ============================================= */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // SW registration failed silently — site still works
+    });
+  });
+}
