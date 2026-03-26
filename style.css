@@ -896,3 +896,81 @@
   .hero-sub       { animation: fadeUp 1s 0.6s both; }
   .hero-pills     { animation: fadeUp 1s 0.8s both; }
 }
+
+/* =============================================
+   STATS BAR
+   ============================================= */
+.stats-bar {
+  background: var(--noir);
+  border-top: 1px solid rgba(245,240,232,0.06);
+  border-bottom: 1px solid rgba(245,240,232,0.06);
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+.stat-item {
+  flex: 1;
+  min-width: 180px;
+  padding: 48px 32px;
+  text-align: center;
+  border-right: 1px solid rgba(245,240,232,0.06);
+  position: relative;
+}
+.stat-item:last-child { border-right: none; }
+.stat-num {
+  display: block;
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  color: var(--jaune);
+  line-height: 1;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+}
+.stat-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.4);
+}
+@media (max-width: 600px) {
+  .stats-bar { flex-direction: column; }
+  .stat-item { border-right: none; border-bottom: 1px solid rgba(245,240,232,0.06); padding: 32px; }
+  .stat-item:last-child { border-bottom: none; }
+}
+
+/* =============================================
+   CURSOR TRAIL
+   ============================================= */
+.cursor-trail {
+  display: none;
+  position: fixed;
+  border-radius: 50%;
+  background: var(--jaune);
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.1s;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cursor-trail { display: block; }
+}
+
+/* =============================================
+   VIEW TRANSITIONS (menu tabs)
+   ============================================= */
+@keyframes vt-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+::view-transition-old(menu-panel) {
+  animation: none;
+  opacity: 0;
+}
+::view-transition-new(menu-panel) {
+  animation: vt-fade-in 0.3s ease both;
+}
+.menu-panel.active {
+  view-transition-name: menu-panel;
+}
